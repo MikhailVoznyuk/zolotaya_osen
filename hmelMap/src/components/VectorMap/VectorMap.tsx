@@ -1,5 +1,6 @@
-import {useEffect, useState, useRef} from 'react'
+import {useEffect, useRef} from 'react'
 
+// @ts-ignore
 import jsVectorMap from 'jsvectormap';
 import 'jsvectormap/dist/jsvectormap.min.css'
 import '@/maps/russia.js'
@@ -10,9 +11,17 @@ type Regions = {
     new_prods: string[];
 }
 
+type RegionData = {
+    name: string;
+    type: 'Стародавний' | 'Традиционный' | 'Новый',
+    startValue: number;
+    endValue: number;
+}
+type RegionsData = {[key: string]: RegionData}
 
 
-const REGIONS_DATA = {
+
+const REGIONS_DATA: RegionsData = {
     'RU-ORL' : {name: 'Орловская область', type: 'Стародавний', startValue: 160, endValue: 960},
     'RU-KOS' : {name: 'Костромская область', type: 'Стародавний', startValue: 160, endValue: 960},
     'RU-IVA': {name: 'Ивановская область', type: 'Стародавний', startValue: 160, endValue: 960},
@@ -63,6 +72,7 @@ export default function VectorMap() {
         if (mapContainerRef.current != null) {
             mapContainerRef.current.innerHTML = '';
         }
+        // @ts-ignore
         const map = new jsVectorMap({
             selector: '#mapRussia',
             map: 'russia',
@@ -77,7 +87,10 @@ export default function VectorMap() {
                 selectedHover: { fill: '#13DE00' },
             },
             zoomOnScroll: false,
-            onRegionTooltipShow: (event, tooltip, code) => {
+            onRegionTooltipShow: (event: { preventDefault: () => void; }, tooltip: {
+                text: (arg0: string, arg1: boolean) => void;
+                css: (arg0: { color: string; backgroundColor: string; }) => void;
+            }, code: string) => {
                 console.log(code)
 
                 if (ALL_REGIONS.has(code)) {
@@ -98,7 +111,7 @@ export default function VectorMap() {
                     console.log('no')
                     event.preventDefault();
                     //tooltip.css({color:'#515151', backgroundColor: '#FFF'});
-                };
+                }
 
 
 
