@@ -130,6 +130,10 @@ export default function VectorMap() {
                 map.scale = 3;
                 map.transY = -600;
                 map.transX = -40;
+            } else {
+                map.scale = 3;
+                map.transY = -600;
+                map.transX = -40;
             }
             map.updateSize()});
 
