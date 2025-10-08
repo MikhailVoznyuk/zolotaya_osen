@@ -149,11 +149,11 @@ export default function VectorMap() {
                          <br />
                          Регион: ${REGIONS_DATA[code].type}
                          <br />
-                         Площадь посевов в 2024: ${REGIONS_DATA[code].startValue}
+                         Площадь посевов в 2024: ${REGIONS_DATA[code].startValue} га
                          <br />
-                         План. площадь посевов в 2035: ${REGIONS_DATA[code].endValue}
+                         План. площадь посевов в 2035: ${REGIONS_DATA[code].endValue} га
                          <br />
-                         Ср. годовой прирост: ${Math.floor((REGIONS_DATA[code].endValue - REGIONS_DATA[code].startValue) / 11)}
+                         Ср. годовой прирост: ${Math.floor((REGIONS_DATA[code].endValue - REGIONS_DATA[code].startValue) / 11)} га
                          </p>`, true);
                     tooltip.css({color:LABEL_STYLES[REGIONS_DATA[code].type][1], backgroundColor: LABEL_STYLES[REGIONS_DATA[code].type][0]});
                 } else {
