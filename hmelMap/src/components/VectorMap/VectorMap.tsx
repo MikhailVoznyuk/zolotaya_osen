@@ -1,9 +1,13 @@
-import {useEffect, useRef} from 'react'
+import {useEffect, useState, useRef} from 'react'
 
 // @ts-ignore
 import jsVectorMap from 'jsvectormap';
 import 'jsvectormap/dist/jsvectormap.min.css'
 import '@/maps/russia.js'
+import '@/maps/belarus.js'
+
+import ToggleButton from "@/ui/ToggleButton/ToggleButton.tsx";
+import MapLabel from "@/ui/MapLabel/MapLabel.tsx";
 
 type Regions = {
     old_prods: string[];
@@ -62,31 +66,76 @@ const SELECTED_REGIONS: Regions = {
     new_prods: ['RU-TVE', 'RU-NIZ', 'RU-TAM', 'RU-AD', 'RU-KB', 'RU-DA', 'RU-UD', 'RU-SAM', 'RU-ORE', 'RU-OMS', 'RU-KHA']
 }
 
+const seriesValues = {
+    ...Object.fromEntries(SELECTED_REGIONS.old_prods.map(k => [k, 'old'])),
+    ...Object.fromEntries(SELECTED_REGIONS.trad_prods.map(k => [k, 'trad'])),
+    ...Object.fromEntries(SELECTED_REGIONS.new_prods.map(k => [k, 'new'])),
+};
+
 const ALL_REGIONS = new Set<string>(SELECTED_REGIONS.old_prods.concat(
     SELECTED_REGIONS.trad_prods,
     SELECTED_REGIONS.new_prods));
 
+const BY_REGIONS = ['BY-BR', 'BY-HO'];
+
+const LABEL_STYLES = {
+    'Стародавний': ['#C26829', '#FFF'],
+    'Традиционный': ['#D49600', '#FFF'],
+    'Новый': ['#6584D5', '#FFF'],
+}
+
 export default function VectorMap() {
-    const mapContainerRef = useRef<HTMLDivElement | null>(null)
+    const [curMap, setCurMap] = useState<0 | 1>(0);
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
+    const mapRef = useRef<any>(null);
     useEffect(() => {
+        try { mapRef.current?.destroy?.() } catch {}
         if (mapContainerRef.current != null) {
             mapContainerRef.current.innerHTML = '';
         }
+
         // @ts-ignore
-        const map = new jsVectorMap({
-            selector: '#mapRussia',
+        let map = (curMap == 0) ?
+            new jsVectorMap({
+            selector: '#mapContainer',
             map: 'russia',
-            selectedRegions: SELECTED_REGIONS.old_prods.concat(
-                SELECTED_REGIONS.trad_prods,
-                SELECTED_REGIONS.new_prods),
+
             regionStyle: {
                 initial: {
                     stroke: 'green',
                 },
-                selected: { fill: 'green' },
-                selectedHover: { fill: '#13DE00' },
+                selected: {},        // заменяет дефолтный объект и убирает дефолтный fill
+                selectedHover: {},
+
+
             },
+            series: {
+                regions: [
+                    {
+                        attribute: 'fill',
+
+                        scale: {
+                            "old": "#C26829",
+                            "trad": "#D49600",
+                            "new": "#6584D5"
+                        },
+                        values: seriesValues,
+                    }
+                ],
+            },
+
             zoomOnScroll: false,
+            onRegionSelected: (_index: number, _isSelected: boolean, _selected: string[], code: string) => {
+                // при любом выборе переустанавливаем серию, чтобы перекрыть наглую заливку selected
+                // @ts-ignore
+                map.series.regions[0].setValues(seriesValues);
+                // если хочешь подсветку выбранного — задаём только обводку напрямую
+                // @ts-ignore
+                const el = map.regions[code]?.element;
+                if (el) {
+                    el.setStyle({ stroke: '#13DE00', 'stroke-width': 2 });
+                }
+            },
             onRegionTooltipShow: (event: { preventDefault: () => void; }, tooltip: {
                 text: (arg0: string, arg1: boolean) => void;
                 css: (arg0: { color: string; backgroundColor: string; }) => void;
@@ -106,7 +155,7 @@ export default function VectorMap() {
                          <br />
                          Ср. годовой прирост: ${Math.floor((REGIONS_DATA[code].endValue - REGIONS_DATA[code].startValue) / 11)}
                          </p>`, true);
-                    tooltip.css({color:'#FFF', backgroundColor: '#13DE00'});
+                    tooltip.css({color:LABEL_STYLES[REGIONS_DATA[code].type][1], backgroundColor: LABEL_STYLES[REGIONS_DATA[code].type][0]});
                 } else {
                     console.log('no')
                     event.preventDefault();
@@ -116,24 +165,87 @@ export default function VectorMap() {
 
 
             }
-        });
-        console.log(map)
+        }) :
+            new jsVectorMap({
+                selector: '#mapContainer',
+                map: 'belarus',
+                selectedRegions: BY_REGIONS,
+                regionStyle: {
+                    initial: {
+                        stroke: 'white',
+                        strokeWidth: 3
+                    },
+                    selected: { fill: '#6584D5' },
+                    selectedHover: { fill: '#6584D5' },
+                },
+                zoomOnScroll: false,
+                onRegionTooltipShow: (event: { preventDefault: () => void; }, tooltip: {
+                    text: (arg0: string, arg1: boolean) => void;
+                    css: (arg0: { color: string; backgroundColor: string; }) => void;
+                }, code: string) => {
+                    console.log(code)
 
+                    if (BY_REGIONS.includes(code)) {
+                        console.log('yes')
+                        tooltip.text(
+                            `<p>${code === 'BY-BR' ? 'Брестская облать' : 'Гомельская область'}
+                         <br />
+                         Потенциальный производитель 
+                         </p>`, true);
+                        tooltip.css({color: '#FFF', backgroundColor: '#6584D5'});
+                    } else {
+                        console.log('no')
+                        event.preventDefault();
+                        //tooltip.css({color:'#515151', backgroundColor: '#FFF'});
+                    }
+                }
+            })
+
+        if (curMap === 0) {
+            map.series.regions[0].setValues(seriesValues);
+        }
+
+
+
+        console.log(map)
+        mapRef.current = map
         const ro = new ResizeObserver(() => {
             const width = window.innerWidth;
             console.log(width);
             if (width > 900) {
-                map.scale = 1.7;
-                map.transY = -600;
-                map.transX = -40;
+                if (curMap === 0) {
+                    map.scale = 1.7;
+                    map.transY = -600;
+                    map.transX = -40;
+                } else {
+                    console.log('resized')
+                    map.scale = 0.8;
+                    map.transY = -0;
+                    map.transX = 0;
+                }
+
             } else if (width > 540) {
-                map.scale = 3;
-                map.transY = -600;
-                map.transX = -40;
+                if (curMap === 0) {
+                    map.scale = 3;
+                    map.transY = -600;
+                    map.transX = -40;
+                } else {
+                    map.scale = 0.8;
+                    map.transY = 0;
+                    map.transX = 0;
+                }
+
             } else {
-                map.scale = 3;
-                map.transY = -600;
-                map.transX = -40;
+                if (curMap === 0) {
+                    map.scale = 2.5;
+                    map.transY = -600;
+                    map.transX = -40;
+                } else {
+                    map.scale = 0.4;
+                    map.transY = -100;
+                    map.transX = -40;
+
+                }
             }
             map.updateSize()});
 
@@ -142,13 +254,18 @@ export default function VectorMap() {
             ro.observe(mapContainerRef.current);
         }
 
+        return () => {
+            ro.disconnect()
+            try { map.destroy() } catch {}
+        }
 
-
-    }, []);
+    }, [curMap]);
 
     return (
         <div className='w-screen h-screen relative bg-white'>
-            <div ref={mapContainerRef} id='mapRussia' />
+            <ToggleButton state={curMap} handler={setCurMap} />
+            <MapLabel rus={!Boolean(curMap)} />
+            <div ref={mapContainerRef} id='mapContainer' />
         </div>
     )
 }

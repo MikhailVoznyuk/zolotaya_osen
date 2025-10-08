@@ -31,7 +31,7 @@ export default function GlassCard(props: GlassCardProps) {
     } else {
         return (
             <div
-                className={`${props.tailwindStyles ?? ''} flex flex-col ${props.imgFull ? 'w-[320px] p-3' : 'w-[240px] p-4'}  items-center gap-4 relative h-fit rounded-2xl shadow-[0_0_4px_rgba(0,0,0,0.3)] backdrop-blur-sm bg-[rgba(255,255,255,0.3)] overflow-hidden border-[1px] border-[rgba(255,255,255,0.4)]`}
+                className={`${props.tailwindStyles ?? ''} flex flex-col ${props.imgFull ? 'w-[320px] p-3' : 'w-[240px] p-4'}  items-center gap-4 relative h-fit rounded-2xl shadow-[0_0_4px_rgba(0,0,0,0.3)] backdrop-blur-sm bg-[rgba(255,255,255,0.3)] overflow-hidden border-[1px] border-[rgba(255,255,255,0.4)] transition-[0.4s_ease] hover:bg-[rgba(0,166,62,0.2)] hover:text-white transform-[scale(1)] hover:transform-[scale(1.05)]`}
                 style={props.styles ?? {}}
             >
                 <img className={`${props.rounded ? 'rounded-full' : ''}  ${props.imgFull ? 'w-full rounded-2xl' : 'h-[120px]'}`} src={props.imageSrc} alt='' />
