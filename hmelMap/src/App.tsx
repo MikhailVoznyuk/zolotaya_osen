@@ -4,6 +4,7 @@ import GlassBlock from "@/components/GlassBlock/GlassBlock.tsx";
 import TextSection from "@/components/TextSection/TextSection.tsx";
 import GlassCard from "@/components/GlassCard/GlassCard.tsx";
 import Navigation from "@/components/Navigation/Navigation.tsx";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
 
@@ -207,6 +208,7 @@ function App() {
 
               </div>
           </div>
+          <Analytics />
       </>
 
   )
